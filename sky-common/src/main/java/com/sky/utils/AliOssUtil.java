@@ -26,7 +26,7 @@ public class AliOssUtil {
      * @param objectName
      * @return
      */
-    public String upload(byte[] bytes, String objectName) {
+    public String upload(byte[] bytes, String objectName)  throws OSSException, ClientException {
 
         // 创建OSSClient实例。
         OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
@@ -41,11 +41,13 @@ public class AliOssUtil {
             System.out.println("Error Code:" + oe.getErrorCode());
             System.out.println("Request ID:" + oe.getRequestId());
             System.out.println("Host ID:" + oe.getHostId());
+            throw oe;
         } catch (ClientException ce) {
             System.out.println("Caught an ClientException, which means the client encountered "
                     + "a serious internal problem while trying to communicate with OSS, "
                     + "such as not being able to access the network.");
             System.out.println("Error Message:" + ce.getMessage());
+            throw ce;
         } finally {
             if (ossClient != null) {
                 ossClient.shutdown();
