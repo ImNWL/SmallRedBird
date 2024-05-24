@@ -11,6 +11,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,6 +40,7 @@ public class DishController {
      */
     @PostMapping()
     @ApiOperation("新增菜品")
+    @CacheEvict(cacheNames = "setmealCache", key = "#categoryId")
     public Result save(@RequestBody DishDTO dishDTO) {
         log.info("新增菜品 {}", dishDTO);
         dishService.saveWithFlavor(dishDTO);
