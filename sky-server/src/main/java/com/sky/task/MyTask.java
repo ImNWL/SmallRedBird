@@ -13,7 +13,7 @@ public class MyTask {
     /**
      * 定时任务
      */
-    @Scheduled(cron = "0/5 * * * * ?")
+//    @Scheduled(cron = "0/5 * * * * ?")
     public void executeTask() {
         System.out.println(LocalDateTime.now());
     }
