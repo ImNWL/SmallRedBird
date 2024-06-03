@@ -8,10 +8,13 @@ import java.io.Serializable;
 
 @Data
 @ApiModel(description = "用户注册时传递的数据模型")
-public class UserLoginDTO implements Serializable {
+public class UserRegisterDTO implements Serializable {
 
     @ApiModelProperty("手机号")
     private String phone;
+
+    @ApiModelProperty("用户名")
+    private String username;
 
     @ApiModelProperty("密码")
     private String password;

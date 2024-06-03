@@ -1,14 +1,9 @@
 package com.sky.mapper;
 
-import com.sky.annotation.AutoFill;
-import com.sky.entity.Employee;
 import com.sky.entity.MyFollow;
-import com.sky.entity.MyUser;
-import com.sky.enumeration.OperationType;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
 
 @Mapper
 public interface MyFollowMapper {

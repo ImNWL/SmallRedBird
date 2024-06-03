@@ -2,7 +2,6 @@ package com.sky.service.impl;
 
 import com.sky.context.BaseContext;
 import com.sky.dto.MyFollowRequestDTO;
-import com.sky.entity.Dish;
 import com.sky.entity.MyFollow;
 import com.sky.mapper.MyFollowMapper;
 import com.sky.service.MyFollowService;

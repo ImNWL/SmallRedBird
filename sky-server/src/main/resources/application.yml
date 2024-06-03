@@ -16,6 +16,10 @@ spring:
     host: ${sky.redis.host}
     port: ${sky.redis.port}
 
+  redisson:
+    single-server-config:
+      address: "redis://localhost:6379"
+
 mybatis:
   #mapper配置文件
   mapper-locations: classpath:mapper/*.xml
@@ -45,3 +49,14 @@ sky:
     access-key-id: ${sky.alioss.access-key-id}
     access-key-secret: ${sky.alioss.access-key-secret}
     bucket-name: ${sky.alioss.bucket-name}
+
+#kafka:
+#  bootstrap-servers: localhost:9092
+#  consumer:
+#    key-deserializer: org.apache.kafka.common.serialization.JsonDeserializer
+#    value-deserializer: org.apache.kafka.common.serialization.JsonDeserializer
+#  producer:
+#    key-serializer: org.apache.kafka.common.serialization.JsonSerializer
+#    value-serializer: org.apache.kafka.common.serialization.JsonSerializer
+#    properties:
+#      linger.ms: 100000

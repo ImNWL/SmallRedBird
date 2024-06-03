@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.UserMapper">
+    <update id="updateById">
+        update tb_user
+        <set>
+            <if test="phone != null">
+                phone = #{phone},
+            </if>
+            <if test="username != null">
+                username = #{username},
+            </if>
+            <if test="salt != null">
+                salt = #{salt},
+            </if>
+            <if test="image != null">
+                image = #{image},
+            </if>
+            <if test="signature != null">
+                signature = #{signature},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="attention != null">
+                attention = #{attention},
+            </if>
+            <if test="followers != null">
+                followers = #{followers},
+            </if>
+            <if test="works != null">
+                works = #{works},
+            </if>
+            <if test="likes != null">
+                likes = #{likes},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>
