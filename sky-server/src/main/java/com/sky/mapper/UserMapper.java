@@ -12,8 +12,7 @@ public interface UserMapper {
     @Select("select * from tb_user where phone = #{phone}")
     User getByPhone(String phone);
 
-    @Insert("insert into tb_user (phone, username, password) VALUES (#{phone},#{username},#{password})")
     void insert(User user);
 
-    void updateById(User user);
+    void updateByPhone(User user);
 }

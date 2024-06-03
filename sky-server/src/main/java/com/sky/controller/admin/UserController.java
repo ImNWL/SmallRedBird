@@ -73,7 +73,7 @@ public class UserController {
     @PutMapping()
     public Result update(@RequestBody UserUpdateDTO userUpdateDTO) {
         log.info("用户信息更新 {}", userUpdateDTO);
-        userService.update(userUpdateDTO);
+        userService.updateByPhone(userUpdateDTO);
         return Result.success();
     }
 }

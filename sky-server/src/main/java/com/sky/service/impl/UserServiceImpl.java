@@ -40,13 +40,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private RedisTemplate redisTemplate;
 
-    @Override
     @Transactional
     public void register(UserRegisterDTO userRegisterDTO) {
-        // 检查手机号是否已被注册
-        if (checkUserExists(userRegisterDTO.getPhone())) {
-            throw new BadRegisterException(MessageConstant.PHONE_EXISTS);
-        }
+        // Todo 布隆过滤器
 
         // 分布式锁
         String lockKey = "phone-lock-" + userRegisterDTO.getPhone();
@@ -62,9 +58,6 @@ public class UserServiceImpl implements UserService {
                 // 执行数据库操作
                 userMapper.insert(user);
 
-                // 消息队列，同步更改至Redis
-                saveToRedis(user);
-
             } finally {
                 // 释放锁
                 redisLockCompoent.releaseLock(lockKey, lockValue);
@@ -74,55 +67,46 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    public boolean checkUserExists(String phone) {
-        if (redisTemplate.opsForValue().get("user:" + phone) != null) {
-            log.info("用户已存在");
-            return true;
-        }
-        log.info("用户不存在");
-        return false;
-    }
-
-    @Transactional
     public User login(UserLoginDTO userLoginDTO) {
-
-        // 检查手机号是否已被注册
         // Todo 布隆过滤器
-//        if (!checkUserExists(userLoginDTO.getPhone())) {
-//            throw new BadRegisterException(MessageConstant.PHONE_NOT_EXISTS);
-//        }
 
-        User user = (User) redisTemplate.opsForValue().get("user:" + userLoginDTO.getPhone());
+        User user = getUserByPhoneWithCache(userLoginDTO.getPhone());
         if (user == null) {
-            log.info("用户不存在Redis缓存中");
-            // 执行数据库操作
-            user = userMapper.getByPhone(userLoginDTO.getPhone());
-            if (user == null) {
-                log.info("用户不存在数据库中");
-                // 账号不存在
-                throw new BadRegisterException(MessageConstant.ACCOUNT_NOT_FOUND);
-            }
-            if (!userLoginDTO.getPassword().equals(user.getPassword())) {
-                //密码错误
-                throw new BadRegisterException(MessageConstant.PASSWORD_ERROR);
-            }
-            // 消息队列，同步更改至Redis
-            saveToRedis(user);
-        } else {
-            log.info("用户存在Redis缓存中");
-            if (!userLoginDTO.getPassword().equals(user.getPassword())) {
-                //密码错误
-                throw new BadRegisterException(MessageConstant.PASSWORD_ERROR);
-            }
+            // 用户不存在
+            throw new BadRegisterException(MessageConstant.ACCOUNT_NOT_FOUND);
+        }
+        if (!userLoginDTO.getPassword().equals(user.getPassword())) {
+            //密码错误
+            throw new BadRegisterException(MessageConstant.PASSWORD_ERROR);
         }
 
         // 返回实体对象
         return user;
     }
 
-    @Override
     @Transactional
-    public void update(UserUpdateDTO userUpdateDTO) {
+    public User getUserByPhoneWithCache(String phone) {
+        User user = (User) redisTemplate.opsForValue().get("user:" + phone);
+        if (user == null) {
+            log.info("用户不存在Redis缓存中");
+            // 执行数据库操作
+            user = userMapper.getByPhone(phone);
+            if (user == null) {
+                log.info("用户不存在数据库中");
+                // 账号不存在
+                return null;
+            }
+            // 同步至Redis
+            log.info("更新至Redis缓存: {}", user);
+            redisTemplate.opsForValue().set("user:" + phone, user, 10, TimeUnit.SECONDS);
+        } else {
+            log.info("用户存在Redis缓存中");
+        }
+        return user;
+    }
+
+    @Transactional
+    public void updateByPhone(UserUpdateDTO userUpdateDTO) {
         if (userUpdateDTO .getPhone() == null) {
             throw new BadRegisterException(MessageConstant.ERROR);
         }
@@ -131,11 +115,15 @@ public class UserServiceImpl implements UserService {
         BeanUtils.copyProperties(userUpdateDTO, user);
 
         // 执行数据库操作
-        userMapper.updateById(user);
+        userMapper.updateByPhone(user);
 
         // 消息队列，同步更改至Redis
-        deleteInRedis(user);
+        log.info("删除Redis缓存中: {}", user);
+        redisTemplate.opsForValue().getAndDelete("user:" + user.getPhone());
     }
+
+
+
 
     private void saveToRedis(User user) {
         // 消息队列，同步更改至Redis
@@ -152,6 +140,8 @@ public class UserServiceImpl implements UserService {
         });
     }
 
+
+
     private void deleteInRedis(User user) {
         // 消息队列，同步更改至Redis
         kafkaTemplate.send(MessageConstant.KAFKA_TOPIC_USER_DELETE, JSON.toJSONString(user)).addCallback(new ListenableFutureCallback() {
@@ -166,4 +156,13 @@ public class UserServiceImpl implements UserService {
             }
         });
     }
+
+//    private boolean checkUserExists(String phone) {
+//        if (redisTemplate.opsForValue().get("user:" + phone) != null) {
+//            log.info("用户已存在");
+//            return true;
+//        }
+//        log.info("用户不存在");
+//        return false;
+//    }
 }

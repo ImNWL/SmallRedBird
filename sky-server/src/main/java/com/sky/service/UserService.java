@@ -13,7 +13,5 @@ public interface UserService {
 
     void register(UserRegisterDTO userRegisterDTO);
 
-    boolean checkUserExists(String phone);
-
-    void update(UserUpdateDTO userUpdateDTO);
+    void updateByPhone(UserUpdateDTO userUpdateDTO);
 }
