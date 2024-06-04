@@ -27,9 +27,8 @@ public class UserRedisComponent {
     }
 
     @KafkaListener(topics = MessageConstant.KAFKA_TOPIC_USER_DELETE, groupId = "group1")
-    public void listernForDelete(String str) {
-        User user = JSON.parseObject(str, User.class);
-        log.info("删除Redis缓存中: {}", user);
-        redisTemplate.opsForValue().getAndDelete("user:" + user.getPhone());
+    public void listernForDelete(String key) {
+        log.info("删除Redis缓存中: {}", key);
+        redisTemplate.opsForValue().getAndDelete(key);
     }
 }

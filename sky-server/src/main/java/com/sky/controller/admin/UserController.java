@@ -24,12 +24,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * 员工管理
- */
 @RestController
 @RequestMapping("/SRB/user")
-@Api(tags = "我的登陆相关接口")
+@Api(tags = "用户相关接口")
 @Slf4j
 public class UserController {
 

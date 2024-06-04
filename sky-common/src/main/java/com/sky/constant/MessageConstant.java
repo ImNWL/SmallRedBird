@@ -33,5 +33,9 @@ public class MessageConstant {
 
     public static final String KAFKA_TOPIC_USER_REGISTER = "user-register";
     public static final String KAFKA_TOPIC_USER_DELETE = "user-delete";
+    public static final String KAFKA_TOPIC_VIDEO_SAVE = "video-save";
+    public static final String KAFKA_TOPIC_LIKE_SAVE = "like-save";
+
+    public static final int EXPECTED_BITMAP_SIZE = 5;
 
 }

@@ -101,6 +101,8 @@ public class UserServiceImpl implements UserService {
             redisTemplate.opsForValue().set("user:" + phone, user, 10, TimeUnit.SECONDS);
         } else {
             log.info("用户存在Redis缓存中");
+            // 更新Redis缓存过期时间
+            redisTemplate.expire("user:" + phone, 10, TimeUnit.SECONDS);
         }
         return user;
     }
@@ -118,33 +120,13 @@ public class UserServiceImpl implements UserService {
         userMapper.updateByPhone(user);
 
         // 消息队列，同步更改至Redis
-        log.info("删除Redis缓存中: {}", user);
-        redisTemplate.opsForValue().getAndDelete("user:" + user.getPhone());
+        deleteInRedis(user);
     }
-
-
-
-
-    private void saveToRedis(User user) {
-        // 消息队列，同步更改至Redis
-        kafkaTemplate.send(MessageConstant.KAFKA_TOPIC_USER_REGISTER, JSON.toJSONString(user)).addCallback(new ListenableFutureCallback() {
-            @Override
-            public void onFailure(Throwable throwable) {
-                log.error("发送消息队列失败至{}: {}", MessageConstant.KAFKA_TOPIC_USER_REGISTER, user);
-                throw new BadRegisterException(MessageConstant.KAFKA_PROBLEM);
-            }
-            @Override
-            public void onSuccess(Object o) {
-                log.info("发送消息队列成功至{}: {}", MessageConstant.KAFKA_TOPIC_USER_REGISTER, user);
-            }
-        });
-    }
-
 
 
     private void deleteInRedis(User user) {
         // 消息队列，同步更改至Redis
-        kafkaTemplate.send(MessageConstant.KAFKA_TOPIC_USER_DELETE, JSON.toJSONString(user)).addCallback(new ListenableFutureCallback() {
+        kafkaTemplate.send(MessageConstant.KAFKA_TOPIC_USER_DELETE, user.getPhone(),"user:" + user.getPhone()).addCallback(new ListenableFutureCallback() {
             @Override
             public void onFailure(Throwable throwable) {
                 log.error("发送消息队列失败至{}: {}", MessageConstant.KAFKA_TOPIC_USER_DELETE, user);
@@ -156,6 +138,23 @@ public class UserServiceImpl implements UserService {
             }
         });
     }
+
+
+
+//    private void saveToRedis(User user) {
+//        // 消息队列，同步更改至Redis
+//        kafkaTemplate.send(MessageConstant.KAFKA_TOPIC_USER_REGISTER, JSON.toJSONString(user)).addCallback(new ListenableFutureCallback() {
+//            @Override
+//            public void onFailure(Throwable throwable) {
+//                log.error("发送消息队列失败至{}: {}", MessageConstant.KAFKA_TOPIC_USER_REGISTER, user);
+//                throw new BadRegisterException(MessageConstant.KAFKA_PROBLEM);
+//            }
+//            @Override
+//            public void onSuccess(Object o) {
+//                log.info("发送消息队列成功至{}: {}", MessageConstant.KAFKA_TOPIC_USER_REGISTER, user);
+//            }
+//        });
+//    }
 
 //    private boolean checkUserExists(String phone) {
 //        if (redisTemplate.opsForValue().get("user:" + phone) != null) {
