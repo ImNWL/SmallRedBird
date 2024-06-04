@@ -28,7 +28,7 @@ public class LikeRedisComponent {
     @Autowired
     private LikeMapper likeMapper;
 
-    private ConcurrentHashMap<Long, Boolean> likedVideos = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Long, Long> likedVideos = new ConcurrentHashMap<>();
 
     // 在使用 @KafkaListener 并设置 concurrency 属性的情况下，每个线程会代表一个独立的消费者实例，但它们都属于同一个消费者组。
     @KafkaListener(topics = MessageConstant.KAFKA_TOPIC_LIKE_SAVE, groupId = "group1", concurrency = "3")
@@ -53,21 +53,18 @@ public class LikeRedisComponent {
         redisTemplate.expire(key, 60, TimeUnit.SECONDS);
         redisTemplate.opsForValue().setBit(key, offset, true);
 
-        likedVideos.put(videoId, true);
+        likedVideos.put(videoId, System.currentTimeMillis());
     }
 
     @Scheduled(cron = "0 * * * * ?")
     public void syncLikesToDatabase() {
         log.info("定时任务");
-        likedVideos.keySet().forEach(videoId -> {
-            try {
-                log.info("定时任务，同步点赞到数据库: {}", videoId);
-                synToMySQL(videoId); // 假设这是更新点赞次数的方法
-            } catch (Exception e) {
-                log.error("同步点赞信息到数据库失败，视频ID: {}", videoId, e);
-            }
+        likedVideos.forEach((videoId, v) -> {
+            log.info("定时任务，同步点赞到数据库: {}", videoId);
+            Long updateTime = System.currentTimeMillis();
+            synToMySQL(videoId);
+            likedVideos.compute(videoId, (k, time) -> time < updateTime ? null : time);
         });
-        likedVideos.clear();
     }
 
     private void synToMySQL(Long videoId) {
