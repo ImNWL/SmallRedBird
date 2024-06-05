@@ -5,7 +5,13 @@
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into tb_like (video_id, likes_bitmap) VALUES (#{videoId}, #{likesBitmap})
     </insert>
+    <insert id="insertUser" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_user_like (user_id, likes_bitmap) VALUES (#{userId}, #{likesBitmap})
+    </insert>
     <update id="update">
         update tb_like set likes_bitmap = #{likesBitmap} where video_id = #{videoId}
+    </update>
+    <update id="updateUser">
+        update tb_user_like set likes_bitmap = #{likesBitmap} where user_id = #{userId}
     </update>
 </mapper>

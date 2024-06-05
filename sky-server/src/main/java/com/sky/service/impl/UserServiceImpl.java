@@ -7,11 +7,14 @@ import com.sky.dto.MyUserLoginDTO;
 import com.sky.dto.UserLoginDTO;
 import com.sky.dto.UserRegisterDTO;
 import com.sky.dto.UserUpdateDTO;
+import com.sky.entity.Like;
 import com.sky.entity.MyUser;
 import com.sky.entity.User;
+import com.sky.entity.UserLike;
 import com.sky.exception.AccountNotFoundException;
 import com.sky.exception.BadRegisterException;
 import com.sky.exception.PasswordErrorException;
+import com.sky.mapper.LikeMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +42,8 @@ public class UserServiceImpl implements UserService {
     private KafkaTemplate kafkaTemplate;
     @Autowired
     private RedisTemplate redisTemplate;
+    @Autowired
+    private LikeMapper likeMapper;
 
     @Transactional
     public void register(UserRegisterDTO userRegisterDTO) {
@@ -54,9 +59,13 @@ public class UserServiceImpl implements UserService {
                 // 对象属性拷贝
                 BeanUtils.copyProperties(userRegisterDTO, user);
                 user.setPassword(DigestUtils.md5DigestAsHex(user.getPassword().getBytes()));
-
                 // 执行数据库操作
                 userMapper.insert(user);
+
+                UserLike userLike = new UserLike();
+                userLike.setUserId(user.getId());
+                userLike.setLikesBitmap(new byte[MessageConstant.EXPECTED_BITMAP_SIZE]);
+                likeMapper.insertUser(userLike);
 
             } finally {
                 // 释放锁
